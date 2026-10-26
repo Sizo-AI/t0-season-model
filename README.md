@@ -1,0 +1,66 @@
+# t0-season-model
+
+Season demand forecast for a fashion product colour: a LoRA adapter on top of
+[t0-gamma](https://huggingface.co/theforecastingcompany/t0-gamma) (The Forecasting Company, Apache-2.0).
+It forecasts weekly units (all sizes together) for the weeks of a season; the season forecast is their sum.
+
+| Path | |
+|---|---|
+| `model/lora_adapter.pt` | trained LoRA matrices only — 192 tensors, 11.0M parameters, 44 MB (Git LFS) |
+| `model/config.json` | input groups, readout, rank / alpha, base model, context / horizon |
+| `t0_season_lora.py` | `load()` and `forecast_season()` |
+
+## Use
+
+```bash
+pip install torch==2.8.0 "tfc-t0[torch]==0.6.0" numpy
+git lfs pull
+```
+
+```python
+import t0_season_lora as M
+model, cfg = M.load("model")                          # base t0-gamma from the hub + this adapter
+total = M.forecast_season(model, cfg, history, horizon=13)
+```
+
+`history` holds the product colour's weekly arrays (see the docstring in `t0_season_lora.py`). Run on CPU to
+reproduce the numbers below.
+
+## Inputs (9 groups, chosen by backward elimination)
+
+| Group | Kind | Over the season |
+|---|---|---|
+| sold-out flag (in-stock share < 50%) | known ahead | 0 = in stock |
+| key-sizes-out flag | known ahead | 0 = in stock |
+| week of year (sin / cos) | known ahead | calendar |
+| product age (weeks since first sale) | known ahead | keeps counting |
+| stock on hand | history only | — |
+| restocks | history only | — |
+| sibling colours' units | history only | — |
+| discount share + depth | history only | — |
+| category units | history only | — |
+
+Stock-out rows carry real values in training and "fully in stock" at forecast time, so the output is demand,
+not sales capped by stock. Removed by the elimination: the in-stock share (0–1) and a holiday/sale-window flag.
+
+## Training
+
+LoRA rank 32 (alpha 64) on the 96 linear layers of t0-gamma's 24 transformer layers; base weights frozen.
+Loss = t0's weekly pinball over 21 quantile levels + a season-total pinball term. 375 steps, batch 32,
+lr 3e-4, seed 0, on ~51k windows (≤ 104 weeks of history + 13 weeks ahead) whose targets end before
+2026-01-01. Readout = mean of the 21 quantiles × 0.9 (factor chosen on the 2025 seasons).
+
+## Results (season total vs stock-out-adjusted demand; error = Σ|f − a| ÷ Σa)
+
+The input set was chosen on the 2025 seasons with a model trained only on data before 2025 (39.6%); the final
+model was then retrained through 2025 and scored once on 136 seasons of 2026:
+
+| Model | 2026 error | bias |
+|---|---|---|
+| **this model** | **41.9%** | −4% |
+| t0-gamma, no training | 45.9% | −23% |
+| TimesFM 3.0 | 45.8% | −14% |
+| Timestral-209M | 47.2% | −15% |
+| LightGBM | 49.2% | −21% |
+
+Private research artifact of Sizo AI.
