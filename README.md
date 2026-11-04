@@ -24,10 +24,28 @@ t0-season-model/
 └── paper/                  the research paper (a living document, updated as tests continue)
 ```
 
-**Where are the weights?** Each model folder holds one `lora_adapter.pt` (the
-trained add-on) and one `config.json`. They are stored with Git LFS, so run
-`git lfs pull` after cloning. The base t0-gamma model is not stored here; it
-downloads from Hugging Face when you load an adapter.
+**Where are the weights?** In each model folder: `lora_adapter.pt` is the
+trained add-on (44 MB) and `config.json` its settings.
+
+| Weights | File |
+|---|---|
+| round 14T (best) | `rounds/14T/lora_adapter.pt` |
+| round 11 | `rounds/11/lora_adapter.pt` |
+| round 8b | `rounds/8b/lora_adapter.pt` |
+| app model today | `model/lora_adapter.pt` |
+
+They are stored with **Git LFS**. In GitHub's file list a `.pt` file shows
+about 133 bytes: that is only the LFS pointer. The real 44 MB file opens with
+the file's Download button, or locally:
+
+```bash
+git lfs install
+git clone https://github.com/Sizo-AI/t0-season-model.git   # or, in an existing clone:
+git lfs pull
+```
+
+The base t0-gamma model is not stored here; it downloads from Hugging Face
+when you load an adapter.
 
 ## Two models, two tests
 
