@@ -15,17 +15,20 @@ first day of the season). Nothing here replaces it.
 | `scripts/t0lora_lead.py` | training and evaluation script (round 14T flags) |
 | `scripts/t0gamma_bwe.py` | helpers it imports (series building, LoRA, save / load) |
 | `scripts/train_round_14T.sh` | the exact environment flags of the 14T training run |
-| `results/full_test_*.csv` | per-colour forecasts on the full test, for 14T, 11, 8b and untrained t0-gamma |
+| `results/full_test_*.csv` | per-colour forecasts on the full test: 14T, 11, 8b, untrained t0-gamma (same input as 14T), LightGBM, TimesFM 2.5, Timestral |
 | `score_full_test.py` | scores one results file |
 
 ## Full test (Spring + Summer 2026, 4,826 colour seasons, all leads)
 
 | Round | All colours | Old colours | New colours |
 |---|---|---|---|
-| t0-gamma, no training | 108% (+23%) | 146% (+96%) | 93% (−7%) |
+| t0-gamma, no training (same input as 14T) | 106% (+23%) | 144% (+94%) | 90% (−6%) |
 | 8b | 80% (−48%) | 80% (−23%) | 79% (−58%) |
 | 11 | 74% (−27%) | 78% (−27%) | 73% (−27%) |
 | **14T** | **72% (−25%)** | **78% (−22%)** | **70% (−27%)** |
+| LightGBM (trained on 2025 seasons) | 69% (−40%) | 77% (−33%) | 66% (−43%) |
+| TimesFM 2.5 (no training) | 82% (−43%) | 82% (−37%) | 83% (−45%) |
+| Timestral 209M (no training) | 86% (−32%) | 85% (−32%) | 86% (−32%) |
 
 Error = Σ|forecast − demand| ÷ Σ demand; bias in brackets. Demand = units ÷
 weekly in-stock share (never below 0.3).
@@ -37,7 +40,7 @@ python rounds/score_full_test.py rounds/results/full_test_14T.csv
 ## Results files
 
 One row per colour season and forecast lead. Stores are **A–G**; colours are
-**anonymous ids** (`c00001` …, the same id across the four files). No product
+**anonymous ids** (`c00001` …, the same id across all files). No product
 names, product ids or store names are included.
 
 | Column | |

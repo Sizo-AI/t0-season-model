@@ -5,7 +5,7 @@
 > **A living paper.** This is the current version, and it will be updated.
 > We keep running tests, and each new round, test or comparison will be
 > added here with its date. Numbers in this version are for round 14T.
-> Next update: the comparison with other models on the full test (section 6).
+> Updated 2026-11-04: comparison with LightGBM, TimesFM and Timestral on the full test (section 6).
 
 ## 1. Summary
 
@@ -78,13 +78,14 @@ September 2025, and none of them were in the old test.
 *Figure 3. The same two models on the two tests. Grey: t0-gamma with no training. Blue: our model (round 14T). The old test is easier for both; on both, training helps.*
 
 **The result.** On every colour of Spring and Summer 2026, fine-tuning cut
-the error of t0-gamma from 108% to 72% (section 6). On the old good-seller
-test, an earlier LoRA round also beat TimesFM, Timestral and LightGBM
-(42.0% vs 45.8–49.2%).
+the error of t0-gamma from 106% to 72% (section 6). On the same test it beats
+TimesFM (82%) and Timestral (86%). LightGBM, trained on our data, has a
+slightly lower error (69%) but forecasts much too low (−40% against our
+−25%).
 
 | | All colours | Old colours | New colours |
 |---|---|---|---|
-| t0-gamma, no training | 108% (+23%) | 146% (+96%) | 93% (−7%) |
+| t0-gamma, no training | 106% (+23%) | 144% (+94%) | 90% (−6%) |
 | **Our model (round 14T)** | **72% (−25%)** | **78% (−22%)** | **70% (−27%)** |
 
 ![Error on every colour, Spring and Summer 2026, lower is better](figures/figure-04.svg)
@@ -93,8 +94,8 @@ test, an earlier LoRA round also beat TimesFM, Timestral and LightGBM
 
 
 **Three takeaways**
-1. **Fine-tuning is worth a lot.** Training cut the error from 108% to 72%.
-   Untrained t0-gamma about doubles the forecast for old colours (+96%).
+1. **Fine-tuning is worth a lot.** Training cut the error from 106% to 72%.
+   Untrained t0-gamma about doubles the forecast for old colours (+94%).
 2. **What the store already knows helps most.** The biggest gains came from
    facts the merchant has in advance: the week a colour goes on sale, and the
    product type (taken from the title when the store left it empty).
@@ -193,7 +194,7 @@ never seen a fashion store. Even when it gets the same rows as our model, it
 doesn't know what a sold-out week, a launch week or a sale week means here.
 - When a product sold out, its past sales look low, and a launch week looks
   like any other week. On 2026, untrained t0-gamma about doubled the forecast
-  for old colours (+96%).
+  for old colours (+94%).
 - New products have no history at all. Our test includes them, and so
   does our model's training (sections 3 and 4).
 
@@ -231,7 +232,7 @@ the season starts, each time using only data from before that date.
 
 **The old test: old good sellers.** The early rounds were built and checked
 on good sellers only. Section 1 compares the two tests, including round 14T
-on 130 such colours from the test seasons.
+on 133 such colours from the test seasons.
 
 **Four kinds of colour.** What the model knows about a colour on the first
 day of the season decides how hard it is. We split the test into four kinds:
@@ -352,7 +353,7 @@ weights. We scored every round from round 8 on the same full test and kept
 
 | Round | What changed | All colours | Old colours | New colours | Old good sellers |
 |---|---|---|---|---|---|
-| — | t0-gamma, no training (same input) | 108% (+23%) | 146% (+96%) | 93% (−7%) | 66% |
+| — | t0-gamma, no training (same input) | 106% (+23%) | 144% (+94%) | 90% (−6%) | 68% |
 | 8b | Season-only input, siblings as the stand-in | 80% (−48%) | 80% (−23%) | 79% (−58%) | 39% |
 | 11 | + release week, new colours in training | 74% (−27%) | 78% (−27%) | 73% (−27%) | 50% |
 | 12 | 11 + last year's launches as the stand-in for new colours | 80% (+4%) | 85% | 78% | — |
@@ -405,26 +406,61 @@ colours. Nothing from 2026 was used in training.
 
 | | All colours | Old colours | New colours | Old good sellers* |
 |---|---|---|---|---|
-| t0-gamma, no training | 108% (+23%) | 146% (+96%) | 93% (−7%) | 66% (+47%) |
+| t0-gamma, no training | 106% (+23%) | 144% (+94%) | 90% (−6%) | 68% (+45%) |
 | **Our model** | **72% (−25%)** | **78% (−22%)** | **70% (−27%)** | **50%** |
 
 *Error = Σ|forecast − actual| ÷ Σ actual, over all colours and forecast dates,
 lower is better. Bias = how far the total is too high (+) or too low (−).
-\*130 colours that had sold well for at least half a year, forecast on the
+\*133 colours that had sold well for at least half a year, forecast on the
 first day of the season.*
 
 
 
 **How sure is the gain?** We resampled the 4,826 colour seasons 2,000 times
 (bootstrap). Our model beat untrained t0-gamma in every resample: the gain is
-36 points, with a 90% range of 33 to 40 points.
+34 points, with a 90% range of 30 to 38 points.
 
-**Against other models.** We have compared the other models only on the old
-good-seller test: 136 colours from 2026 seasons, forecast on the first day of
-the season. On that test the t0-gamma LoRA was an earlier round (forecast
-from the season start, 9 input groups), not round 14T. Round 14T and the
-other models have not yet been scored side by side on the full test; that
-run is under way.
+**Against other models: the full test.** We ran three other models on
+exactly the same 4,826 colour seasons and forecast dates as round 14T.
+
+| Model | All colours | Old colours | New colours |
+|---|---|---|---|
+| **t0-gamma + LoRA, round 14T** | **72% (−25%)** | **78% (−22%)** | **70% (−27%)** |
+| LightGBM (trained on our 2025 seasons) | 69% (−40%) | 77% (−33%) | 66% (−43%) |
+| TimesFM 2.5 (no training) | 82% (−43%) | 82% (−37%) | 83% (−45%) |
+| Timestral 209M (no training) | 86% (−32%) | 85% (−32%) | 86% (−32%) |
+| t0-gamma (no training) | 106% (+23%) | 144% (+94%) | 90% (−6%) |
+
+![Every model on the full test, lower is better](figures/figure-10.svg)
+
+*Figure 10. Every model on the full test, lower is better. Blue: our model (round 14T).*
+
+| Weeks before the season | 0 | 4 | 8 | 13 | 26 |
+|---|---|---|---|---|---|
+| Round 14T | 67% | 70% | 73% | 74% | 77% |
+| LightGBM | 65% | 67% | 69% | 71% | 74% |
+| TimesFM 2.5 | 73% | 82% | 85% | 88% | 85% |
+| Timestral 209M | 72% | 86% | 86% | 95% | 88% |
+
+What this shows:
+- **Round 14T beats the other foundation models** by 10–14 points
+  (TimesFM 82%, Timestral 86%), at every forecast date.
+- **LightGBM has a lower error than round 14T:** 69% against 72%, about 3
+  points at every forecast date. The gap is real: in a bootstrap, LightGBM
+  wins in every resample (90% range 1.5 to 4.0 points).
+- **But LightGBM forecasts much too low:** −40% against −25% for round 14T.
+  For a buy plan, a forecast 40% short means buying far too little.
+- Notes on fairness: LightGBM learned only from the 2025 seasons, with
+  settings from earlier research and no tuning. TimesFM here is version 2.5
+  (open weights), not the 3.0 version in the old test. Round 14T was trained
+  on data up to 1 December 2025 at every forecast date, so for forecasts 13
+  and 26 weeks ahead it may have seen a little more recent data than
+  LightGBM.
+
+**Against other models: the old test.** Earlier, on the old good-seller test
+(136 colours from 2026, forecast on the first day of the season), an earlier
+LoRA round was the best of the models we compared. That round is not round
+14T.
 
 | Model | 2025 error (bias) | 2026 error (bias) |
 |---|---|---|
@@ -437,17 +473,14 @@ run is under way.
 \*In-sample: that round was trained on 2025. All choices were made on 2025
 (223 colours); 2026 was scored once.
 
-![The old good-seller test (136 colours, 2026), lower is better](figures/figure-10.svg)
+![The old good-seller test (136 colours, 2026), lower is better](figures/figure-11.svg)
 
-*Figure 10. The old good-seller test (136 colours, 2026), lower is better. Blue: the earlier t0-gamma LoRA round. Bias: how far the total was too high (+) or too low (−).*
+*Figure 11. The old good-seller test (136 colours, 2026), lower is better. Blue: the earlier t0-gamma LoRA round. Bias: how far the total was too high (+) or too low (−).*
 
 - The LoRA round beat untrained t0-gamma in 95% of bootstrap resamples
   (−4.0 points, 90% range −8.0 to +0.1).
-- Added to an equal average of 8 forecasts, it lowered that average's error
-  from 41.8% to 41.4%.
-- What we don't know yet: whether round 14T keeps this lead. On 130 of these
-  old good sellers it scores 50%, but the other models were not run on that
-  exact set.
+- On the full test (above), round 14T keeps its lead over TimesFM and
+  Timestral, but not over LightGBM.
 
 **By forecast date.** The error grows slowly as the forecast is made earlier:
 
@@ -455,52 +488,52 @@ run is under way.
 |---|---|---|---|---|---|
 | Error | 67% | 70% | 73% | 74% | 77% |
 
-![Our model's error by how many weeks before the season the forecast is made](figures/figure-11.svg)
+![Our model's error by how many weeks before the season the forecast is made](figures/figure-12.svg)
 
-*Figure 11. Our model's error by how many weeks before the season the forecast is made. Forecasting half a year ahead costs 10 points.*
+*Figure 12. Our model's error by how many weeks before the season the forecast is made. Forecasting half a year ahead costs 10 points.*
 
 **By season.**
 
 | Season | No training | Our model |
 |---|---|---|
 | Spring 2026 | 122% (+39%) | 81% (−18%) |
-| Summer 2026 | 101% (+15%) | 68% (−29%) |
+| Summer 2026 | 98% (+14%) | 68% (−29%) |
 
 **By store.** Our model is better than no training in every store.
 
 | Store | Colour seasons | Share of demand | No training | Our model |
 |---|---|---|---|---|
 | A | 2,162 | 58% | 116% (+34%) | 77% (−31%) |
-| B | 766 | 13% | 120% (+36%) | 69% (−9%) |
+| B | 766 | 13% | 100% (+25%) | 69% (−9%) |
 | C | 50 | 1% | 117% (+92%) | 71% (−6%) |
-| D | 851 | 8% | 103% (−21%) | 77% (−37%) |
+| D | 851 | 8% | 107% (−8%) | 77% (−37%) |
 | E | 363 | 17% | 71% (−4%) | 56% (−19%) |
-| F | 368 | 1% | 141% (+24%) | 82% (−26%) |
-| G | 266 | 2% | 86% (+2%) | 68% (+7%) |
+| F | 368 | 1% | 140% (+22%) | 82% (−26%) |
+| G | 266 | 2% | 86% (+3%) | 68% (+7%) |
 
-![Error by store](figures/figure-12.svg)
+![Error by store](figures/figure-13.svg)
 
-*Figure 12. Error by store. Grey: no training. Blue: our model. Store A carries 58% of all demand, so it weighs most in the total.*
+*Figure 13. Error by store. Grey: no training. Blue: our model. Store A carries 58% of all demand, so it weighs most in the total.*
 
 **By kind of colour** (the kinds are defined in section 3).
 
 | Kind | Share of demand | No training | Our model |
 |---|---|---|---|
-| 1. Launched in the season | 37% | 71% (−46%) | **62% (−34%)** |
-| 2. Started shortly before | 34% | 116% (+36%) | 77% (−19%) |
-| 3. Old, but no sales last season | 6% | 198% (+129%) | 96% (−13%) |
-| 4. Old, sold last season | 22% | 132% (+87%) | 73% (−25%) |
+| 1. Launched in the season | 37% | 69% (−44%) | **62% (−34%)** |
+| 2. Started shortly before | 34% | 113% (+35%) | 77% (−19%) |
+| 3. Old, but no sales last season | 6% | 192% (+124%) | 96% (−13%) |
+| 4. Old, sold last season | 22% | 131% (+86%) | 73% (−25%) |
 | Seasonal items | 16% | 136% (+94%) | 68% (−13%) |
-| Accessories (clips, bags, caps) | 18% | 86% | 78% (−44%) |
-| No product type in the store | 12% | 114% (−7%) | 73% (−26%) |
+| Accessories (clips, bags, hats) | 18% | 88% (−13%) | 79% (−44%) |
+| No product type in the store | 12% | 100% (−3%) | 73% (−26%) |
 
-![Error by kind of colour](figures/figure-13.svg)
+![Error by kind of colour](figures/figure-14.svg)
 
-*Figure 13. Error by kind of colour. Grey: no training. Blue: our model. Training helps every kind; it helps most where untrained t0-gamma copies last season.*
+*Figure 14. Error by kind of colour. Grey: no training. Blue: our model. Training helps every kind; it helps most where untrained t0-gamma copies last season.*
 
 What this shows:
 - **The hardest kind is 3, old colours with no sales last season (96%).**
-  Untrained t0-gamma doubles them (+129%); our model is closer but still far.
+  Untrained t0-gamma doubles them (+124%); our model is closer but still far.
   A zero last season tells the model little about this one.
 - **Launched colours are the easiest for our model (62%),** even with no
   history. They are big and they start in a known release week. But they
@@ -508,8 +541,8 @@ What this shows:
   average share, and a hit sells far more.
 - **Untrained t0-gamma copies last season.** Where it sees a last season,
   its own or a stand-in (kinds 2–4 and seasonal items), it forecasts far too
-  high (+36% to +129%);
-  where it doesn't (kind 1), far too low (−46%).
+  high (+35% to +124%);
+  where it doesn't (kind 1), far too low (−44%).
 - **Seasonal items** go from 136% to 68%, the biggest gain, thanks to the
   release week. Inside them, old seasonal colours that sold last season are
   still at about 105%: last year's launch level doesn't repeat.
@@ -550,17 +583,17 @@ attributes attached to each series is the most direct next step.
   the next season is the honest test.
 - **One big store.** Store A is 58% of all demand, so the total leans on it.
   Stores C, F and G are small (1–2% each), so their numbers move a lot.
-- **Other models only on the old test.** TimesFM, Timestral and LightGBM were
-  compared with an earlier LoRA round on 136 old good sellers, not with round
-  14T on the full test (section 6).
+- **LightGBM is slightly more accurate.** On the full test it has a lower
+  error than round 14T (69% vs 72%), though it under-forecasts more (−40% vs
+  −25%). It was not tuned; tuning may widen the gap.
+- **Comparison details.** TimesFM is version 2.5, not 3.0. Round 14T may have
+  seen slightly more recent data at forecasts 13 and 26 weeks ahead.
 - **Still too low.** The model under-forecasts by 25% overall, 27% on new
   colours and 44% on accessories. A buy plan built on it needs that in mind.
 - **A rough launch date.** "New" means first sold within our data, which
   starts in January 2024. A product first sold before then can look new.
 
 ## 9. Ideas for the future
-- **Score the other models on the same test.** Run TimesFM, Timestral and
-  LightGBM on the 4,826 colour seasons, so round 14T has a fair comparison.
 - **Keep product facts next to each series.** t0-gamma rescales every row on
   its own, so a fixed fact (category, price tier, style) carries no signal.
   A model that keeps these facts attached could give new colours the right

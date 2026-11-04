@@ -55,7 +55,7 @@ when you load an adapter.
 | History it sees | up to 104 weeks, 9 input groups | last year's same season + the 8 weeks before the forecast date, + release week |
 | New colours | not covered | covered (stand-in from siblings / category) |
 | Tested on | 136 old good sellers, 2026 | every colour in stock ≥ half the season: 4,826 colour seasons, Spring + Summer 2026 |
-| Error | 41.9% (−4%) | 72% (−25%); untrained t0-gamma 108% (+23%) |
+| Error | 41.9% (−4%) | 72% (−25%); untrained t0-gamma 106% (+23%); LightGBM 69% (−40%) |
 
 The two errors can't be compared: the full test is far harder (56% new colours,
 forecasts up to half a year ahead). On old good sellers round 14T scores 50%.
