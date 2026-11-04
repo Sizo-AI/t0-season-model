@@ -4,16 +4,30 @@ Season demand forecast for a fashion product colour: a LoRA adapter on top of
 [t0-gamma](https://huggingface.co/theforecastingcompany/t0-gamma) (The Forecasting Company, Apache-2.0).
 It forecasts weekly units (all sizes together) for the weeks of a season; the season forecast is their sum.
 
-| Path | |
-|---|---|
-| `model/lora_adapter.pt` | trained LoRA matrices only — 192 tensors, 11.0M parameters, 44 MB (Git LFS) |
-| `model/config.json` | input groups, readout, rank / alpha, base model, context / horizon |
-| `t0_season_lora.py` | `load()` and `forecast_season()` |
-| `rounds/14T/` | **round 14T**: newer season-only adapter that forecasts 0–26 weeks ahead (see below) |
-| `rounds/11/`, `rounds/8b/` | the two rounds on the path to 14T |
-| `rounds/results/` | per-colour full-test forecasts (stores A–G, anonymous colour ids) |
-| `rounds/scripts/` | training script and the exact 14T flags |
-| `paper/` | the research paper (a living document, updated as tests continue) |
+## What is in each folder
+
+```
+t0-season-model/
+├── model/                  the model the app uses today (forecast on the first day of the season)
+│   ├── lora_adapter.pt     its weights: LoRA matrices, 11.0M parameters, 44 MB (Git LFS)
+│   └── config.json         its settings: inputs, readout, rank, base model
+├── t0_season_lora.py       code to load model/ and forecast a season: load(), forecast_season()
+├── rounds/                 newer rounds that forecast 0–26 weeks before the season
+│   ├── 14T/                ★ round 14T, the best round: weights (lora_adapter.pt, Git LFS) + config.json
+│   ├── 11/                 round 11: + release week, new colours in training (weights + config)
+│   ├── 8b/                 round 8b: first season-only round (weights + config)
+│   ├── results/            per-colour forecasts of 14T, 11, 8b and untrained t0-gamma on the full test
+│   │                       (stores A–G, anonymous colour ids, no product names)
+│   ├── scripts/            training script, its helpers, and the exact 14T training flags
+│   ├── score_full_test.py  re-scores any results file: error, bias, by lead and by store
+│   └── README.md           details of the rounds and the results columns
+└── paper/                  the research paper (a living document, updated as tests continue)
+```
+
+**Where are the weights?** Each model folder holds one `lora_adapter.pt` (the
+trained add-on) and one `config.json`. They are stored with Git LFS, so run
+`git lfs pull` after cloning. The base t0-gamma model is not stored here; it
+downloads from Hugging Face when you load an adapter.
 
 ## Two models, two tests
 
